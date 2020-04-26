@@ -8,15 +8,18 @@ def loadDataSet():
 	return np.matrix(X),np.matrix(D)
 
 def sigmoid(s):
+	return 1./(1+np.exp(-s))
+
+def deriv_helper(s): 
 	return 1./(1+np.exp(s))
 
-def gradDescent(X,D,eta=0.001,iteration=7000):
-	m,n=np.shape(X)
-	weights=np.ones((1,n))
+def gradDescent(X, D, eta=0.001, iteration=7000):
+	n,d = np.shape(X)
+	weights = np.ones((1,d))
 	for k in range(iteration):
-		s=np.multiply(D,weights*X.T)
-		deltaEin=np.multiply(sigmoid(s),D)*X*-1.
-		weights=weights-eta*deltaEin
+		s = np.multiply(D, weights*X.T) 
+		deltaEin = (np.multiply(deriv_helper(s),D)*X*-1.) / n # Calcualte the derivative of cost function.
+		weights = weights - eta * deltaEin
 	return weights
 
 def n_fold_CV(X,D,cv=5):
@@ -29,7 +32,7 @@ def n_fold_CV(X,D,cv=5):
 			index=range(i*num_eachfold,(i+1)*num_eachfold)
 			trainD=np.delete(D,index,1);trainX=np.delete(X,index,0)
 			W=gradDescent(trainX,trainD)
-			Y=1./(1+np.exp(-W*testX.T))
+			Y=sigmoid(W*testX.T)
 			Y[np.nonzero(Y>=0.5)]=1.
 			Y[np.nonzero(Y<0.5)]=-1.
 			result.append(float(np.sum((Y==testD),axis=1)/float(testD.shape[1])))
@@ -37,7 +40,7 @@ def n_fold_CV(X,D,cv=5):
 			testX=X[i*num_eachfold:,:];testD=D[:,i*num_eachfold:]
 			trainX=X[:i*num_eachfold,:];trainD=D[:,:i*num_eachfold]
 			W=gradDescent(trainX,trainD)
-			Y=1./(1+np.exp(-W*testX.T))
+			Y=sigmoid(W*testX.T)
 			Y[np.nonzero(Y>=0.5)]=1.
 			Y[np.nonzero(Y<0.5)]=-1.
 			result.append(np.sum((Y==testD),axis=1)/float(testD.shape[1]))
